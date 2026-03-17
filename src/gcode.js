@@ -78,6 +78,9 @@ export function generateCylinderLamp({
   let e = 0
   const STEPS = 120
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
+  // Wave Z must stay between the top of the bottom cap and the bottom of the top cap
+  const zMin = zOffset
+  const zMax = zOffset + layers * layerHeight
 
   if (capBottom) {
     for (let i = 0; i < CAP_LAYERS; i++) {
@@ -105,7 +108,7 @@ export function generateCylinderLamp({
       const y = r * Math.sin(theta)
       e += ePerStep
       lines.push(
-        `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
+        `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${Math.max(zMin, Math.min(zMax, z + zWave)).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
       )
     }
     lines.push('')
@@ -138,6 +141,8 @@ export function generateVase({
   let e = 0
   const STEPS = 120
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
+  const zMin = zOffset
+  const zMax = zOffset + layers * layerHeight
 
   const profileAt = (progress) => flareTop
     ? 0.6 + 0.4 * Math.sin(progress * Math.PI) + 0.3 * progress
@@ -173,7 +178,7 @@ export function generateVase({
       const y = rFinal * Math.sin(theta)
       e += ePerStep
       lines.push(
-        `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
+        `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${Math.max(zMin, Math.min(zMax, z + zWave)).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
       )
     }
     lines.push('')
@@ -209,6 +214,8 @@ export function generatePanel({
   const stepsX = Math.round(panelWidth / extrusionWidth)
   const ePerStep = (extrusionWidth * layerHeight * (panelWidth / stepsX)) / 10
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
+  const zMin = zOffset
+  const zMax = zOffset + layers * layerHeight
 
   if (capBottom) {
     for (let i = 0; i < CAP_LAYERS; i++) {
@@ -239,7 +246,7 @@ export function generatePanel({
           Math.cos(gridY * yBase * 0.25 + layer * 0.4)
         e += ePerStep
         lines.push(
-          `G1 X${x.toFixed(3)} Y${yBase.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
+          `G1 X${x.toFixed(3)} Y${yBase.toFixed(3)} Z${Math.max(zMin, Math.min(zMax, z + zWave)).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
         )
       }
     }
