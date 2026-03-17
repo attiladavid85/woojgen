@@ -284,7 +284,7 @@ export default function App() {
                 <Toggle value={mirrorSpiral} onChange={setMirrorSpiral} label="Tükrözött spirál (rácsminta)"
                   info="Páros és páratlan rétegek ellentétes fázissal futnak — ahol keresztezik egymást, rács csomópont jön létre." />
                 {mirrorSpiral && (
-                  <Slider label="Rács hézag" value={meshGap} min={1} max={20} step={0.5} onChange={setMeshGap} unit=" mm"
+                  <Slider label="Rács hézag" value={meshGap} min={0.1} max={20} step={0.1} onChange={setMeshGap} unit=" mm"
                     info="A két spirál metszéspontjai közötti távolság mm-ben. Nagyobb érték = ritkább rács." />
                 )}
               </>

@@ -36,6 +36,8 @@ const CAP_LAYERS = 3
 
 // Fills a solid circular disk at height z, returns updated e
 function solidDisk(z, r, extrusionWidth, layerHeight, lines, e) {
+  // Non-extruding travel to outer ring start — avoids ooze line from wherever the head is
+  lines.push(`G1 X${r.toFixed(3)} Y0.000 Z${z.toFixed(3)} F9000`)
   let cr = r
   while (cr > extrusionWidth / 2) {
     const STEPS = Math.max(24, Math.round((2 * Math.PI * cr) / extrusionWidth))
@@ -52,6 +54,8 @@ function solidDisk(z, r, extrusionWidth, layerHeight, lines, e) {
 
 // Fills a solid rectangle at height z, returns updated e
 function solidRect(z, w, h, extrusionWidth, layerHeight, lines, e) {
+  // Non-extruding travel to first line start
+  lines.push(`G1 X${(-w / 2).toFixed(3)} Y${(-h / 2).toFixed(3)} Z${z.toFixed(3)} F9000`)
   const lineCount = Math.round(h / (extrusionWidth * 2))
   const stepsX = Math.round(w / extrusionWidth)
   const ePerStep = (extrusionWidth * layerHeight * (w / stepsX)) / 10

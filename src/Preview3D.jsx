@@ -51,7 +51,7 @@ export default function Preview3D({ gcodeLines }) {
         inCap = true
         continue
       }
-      if (line.startsWith('; Layer') || line.startsWith('; Fabric layer')) {
+      if (line.startsWith('; Layer') || line.startsWith('; Fabric layer') || line.startsWith('; CHANGE_LAYER')) {
         inCap = false
       }
       if (inCap || !line.startsWith('G1')) continue
