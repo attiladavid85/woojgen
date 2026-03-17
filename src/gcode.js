@@ -33,7 +33,7 @@ const GCODE_FOOTER = [
 // ── Cylinder Lamp ──────────────────────────────────────────────────────────
 
 export function generateCylinderLamp({
-  radius, height, layers,
+  radius, layers,
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight,
 }) {
@@ -76,7 +76,7 @@ export function generateCylinderLamp({
 // ── Organic Vase ───────────────────────────────────────────────────────────
 
 export function generateVase({
-  radius, height, layers,
+  radius, layers,
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight, flareTop,
 }) {
