@@ -43,9 +43,18 @@ export default function Preview3D({ gcodeLines }) {
     // ── Parse G-code ──
     const points = []
     let minY = Infinity, maxY = -Infinity
+    let inCap = false
 
     for (const line of gcodeLines) {
-      if (!line.startsWith('G1')) continue
+      // Track cap sections by comment — skip their G1 moves to keep preview clean
+      if (line.startsWith('; Bottom cap') || line.startsWith('; Top cap')) {
+        inCap = true
+        continue
+      }
+      if (line.startsWith('; Layer') || line.startsWith('; Fabric layer')) {
+        inCap = false
+      }
+      if (inCap || !line.startsWith('G1')) continue
       const xm = line.match(/X([-\d.]+)/)
       const ym = line.match(/Y([-\d.]+)/)
       const zm = line.match(/Z([-\d.]+)/)
