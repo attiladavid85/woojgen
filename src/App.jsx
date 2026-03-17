@@ -16,24 +16,24 @@ const MODES = [
 
 const css = {
   sectionLabel: {
-    fontSize: 10, letterSpacing: '0.2em', color: '#334466',
+    fontSize: 10, letterSpacing: '0.2em', color: '#6b7fa0',
     textTransform: 'uppercase', marginBottom: 14, display: 'block',
   },
   btn: (active, accent = false) => ({
     width: '100%',
     padding: accent ? '13px' : '10px 14px',
     background: active
-      ? 'linear-gradient(135deg, #0d1a3a, #112244)'
-      : accent ? 'linear-gradient(135deg, #112299, #1a44cc)' : 'transparent',
-    border: `1px solid ${active || accent ? '#2255cc' : '#111833'}`,
+      ? 'linear-gradient(135deg, #131f3e, #182848)'
+      : accent ? 'linear-gradient(135deg, #1a2fa8, #2258d8)' : 'transparent',
+    border: `1px solid ${active || accent ? '#2a65d8' : '#1e293b'}`,
     borderRadius: 8,
-    color: active ? '#88ccff' : accent ? '#cce0ff' : '#334466',
+    color: active ? '#93c5fd' : accent ? '#dbeafe' : '#7090b0',
     cursor: 'pointer',
     fontSize: accent ? 13 : 12,
     letterSpacing: '0.1em',
     fontFamily: 'inherit',
     transition: 'all 0.15s',
-    boxShadow: active || accent ? '0 0 14px #2255cc33' : 'none',
+    boxShadow: active || accent ? '0 0 14px #2a65d833' : 'none',
     display: 'flex',
     alignItems: 'center',
     gap: 10,
@@ -49,19 +49,19 @@ function Toggle({ value, onChange, label }) {
         onClick={() => onChange(!value)}
         style={{
           width: 36, height: 20, borderRadius: 10, cursor: 'pointer',
-          background: value ? '#1a44cc' : '#0d1525',
-          border: '1px solid #223355',
+          background: value ? '#2258d8' : '#1e293b',
+          border: '1px solid #2d4060',
           position: 'relative', transition: 'background 0.2s',
         }}
       >
         <div style={{
           position: 'absolute', top: 3, left: value ? 18 : 3,
           width: 12, height: 12, borderRadius: '50%',
-          background: value ? '#88ccff' : '#334466',
+          background: value ? '#93c5fd' : '#6b7fa0',
           transition: 'left 0.2s, background 0.2s',
         }} />
       </div>
-      <span style={{ fontSize: 11, color: '#556688' }}>{label}</span>
+      <span style={{ fontSize: 11, color: '#8aa8c8' }}>{label}</span>
     </div>
   )
 }
@@ -121,26 +121,26 @@ export default function App() {
   return (
     <div style={{
       height: '100vh', display: 'flex', flexDirection: 'column',
-      background: '#06060f', color: '#cce0ff',
+      background: '#0c1018', color: '#d0e0f8',
       fontFamily: "'DM Mono', 'Fira Mono', 'Courier New', monospace",
     }}>
       {/* ── Header ── */}
       <header style={{
-        padding: '14px 28px', borderBottom: '1px solid #0d1525',
+        padding: '14px 28px', borderBottom: '1px solid #1e293b',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'linear-gradient(to right, #07071a, #090916)',
+        background: 'linear-gradient(to right, #0f1523, #111827)',
         flexShrink: 0,
       }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: '#eef4ff' }}>
             WOOJ<span style={{ color: '#44aaff' }}>GEN</span>
           </div>
-          <div style={{ fontSize: 9, color: '#223355', letterSpacing: '0.25em', marginTop: 1 }}>
+          <div style={{ fontSize: 9, color: '#4a6080', letterSpacing: '0.25em', marginTop: 1 }}>
             PARAMETRIC G-CODE GENERATOR
           </div>
         </div>
         {gcodeText && (
-          <div style={{ fontSize: 11, color: '#334466', textAlign: 'right', lineHeight: 1.7 }}>
+          <div style={{ fontSize: 11, color: '#7090b0', textAlign: 'right', lineHeight: 1.7 }}>
             <span style={{ color: '#44aaff' }}>{moveCount.toLocaleString()}</span> mozgás
             <br />
             <span style={{ color: '#44aaff' }}>{(gcodeText.length / 1024).toFixed(1)}</span> KB
@@ -151,8 +151,8 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* ── Sidebar ── */}
         <aside style={{
-          width: 270, background: '#07071a',
-          borderRight: '1px solid #0d1525',
+          width: 270, background: '#111827',
+          borderRight: '1px solid #1e293b',
           overflowY: 'auto', padding: '22px 20px',
           flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24,
         }}>
@@ -164,8 +164,8 @@ export default function App() {
                 <button key={m.id} onClick={() => setMode(m.id)} style={css.btn(mode === m.id)}>
                   <span style={{ fontSize: 15, opacity: 0.9 }}>{m.icon}</span>
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ color: mode === m.id ? '#88ccff' : '#445577', fontSize: 12 }}>{m.label}</div>
-                    <div style={{ color: '#2a3a55', fontSize: 9, letterSpacing: '0.05em' }}>{m.desc}</div>
+                    <div style={{ color: mode === m.id ? '#93c5fd' : '#7090b0', fontSize: 12 }}>{m.label}</div>
+                    <div style={{ color: '#5a7295', fontSize: 9, letterSpacing: '0.05em' }}>{m.desc}</div>
                   </div>
                 </button>
               ))}
@@ -226,12 +226,12 @@ export default function App() {
 
             {gcodeText && (
               <>
-                <button onClick={download} style={{ ...css.btn(false), justifyContent: 'center', color: '#667799' }}>
+                <button onClick={download} style={{ ...css.btn(false), justifyContent: 'center', color: '#8aa8c8' }}>
                   ↓  G-kód letöltés
                 </button>
                 <button
                   onClick={() => setView(v => v === 'gcode' ? 'preview' : 'gcode')}
-                  style={{ ...css.btn(view === 'gcode'), justifyContent: 'center', color: '#445566', fontSize: 11 }}
+                  style={{ ...css.btn(view === 'gcode'), justifyContent: 'center', color: '#7090b0', fontSize: 11 }}
                 >
                   {view === 'gcode' ? '◎  3D Előnézet' : '≡  G-kód nézet'}
                 </button>
@@ -246,11 +246,11 @@ export default function App() {
             <div style={{
               flex: 1, display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', gap: 16,
-              color: '#111833',
+              color: '#3a5070',
             }}>
               <div style={{ fontSize: 72 }}>◎</div>
               <div style={{ fontSize: 12, letterSpacing: '0.2em' }}>
-                Állítsd be a paramétereket, majd nyomj <span style={{ color: '#223355' }}>GENERÁLÁS</span>-t
+                Állítsd be a paramétereket, majd nyomj <span style={{ color: '#5a7898' }}>GENERÁLÁS</span>-t
               </div>
             </div>
           ) : view === 'gcode' ? (
@@ -260,10 +260,10 @@ export default function App() {
             }}>
               {gcodeLines.map((line, i) => (
                 <div key={i} style={{
-                  color: line.startsWith(';') ? '#1a2d4a'
-                    : line.startsWith('G1') ? '#3366aa'
-                    : line.startsWith('M') ? '#664422'
-                    : '#2a3a55',
+                  color: line.startsWith(';') ? '#4a6a8a'
+                    : line.startsWith('G1') ? '#5588cc'
+                    : line.startsWith('M') ? '#aa7744'
+                    : '#5a7898',
                 }}>
                   {line || '\u00a0'}
                 </div>
@@ -273,7 +273,7 @@ export default function App() {
             <div style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1 }}>
                 <Suspense fallback={
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#223355' }}>
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a7898' }}>
                     Előnézet betöltése...
                   </div>
                 }>
@@ -281,7 +281,7 @@ export default function App() {
                 </Suspense>
               </div>
               <div style={{
-                textAlign: 'center', fontSize: 9, color: '#1a2a3a',
+                textAlign: 'center', fontSize: 9, color: '#4a6080',
                 marginTop: 8, letterSpacing: '0.2em',
               }}>
                 HÚZD A FORGATÁSHOZ  ·  SCROLL = ZOOM

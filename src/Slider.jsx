@@ -16,7 +16,7 @@ export default function Slider({ label, value, min, max, step = 1, onChange, uni
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-        <span style={{ fontSize: 10, letterSpacing: '0.1em', color: '#556688', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: 10, letterSpacing: '0.1em', color: '#8aa8c8', textTransform: 'uppercase' }}>
           {label}
         </span>
         {editing ? (
@@ -28,7 +28,7 @@ export default function Slider({ label, value, min, max, step = 1, onChange, uni
             onBlur={e => commit(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') commit(raw || e.target.value); if (e.key === 'Escape') setEditing(false) }}
             style={{
-              width: 70, background: '#0d1525', border: '1px solid #2255cc',
+              width: 70, background: '#1e293b', border: '1px solid #2a65d8',
               borderRadius: 4, color: '#88bbff', fontSize: 12,
               fontFamily: 'inherit', padding: '1px 4px', textAlign: 'right',
               outline: 'none',
@@ -38,7 +38,7 @@ export default function Slider({ label, value, min, max, step = 1, onChange, uni
           <span
             onClick={() => { setRaw(''); setEditing(true) }}
             title="Kattints a szerkesztéshez"
-            style={{ fontSize: 12, color: '#88bbff', fontFamily: 'inherit', cursor: 'text', borderBottom: '1px dashed #2255cc44' }}
+            style={{ fontSize: 12, color: '#93c5fd', fontFamily: 'inherit', cursor: 'text', borderBottom: '1px dashed #2a65d844' }}
           >
             {display}{unit}
           </span>
@@ -49,7 +49,7 @@ export default function Slider({ label, value, min, max, step = 1, onChange, uni
         {/* Track */}
         <div style={{
           position: 'absolute', left: 0, right: 0, height: 2,
-          background: '#0d1525', borderRadius: 2,
+          background: '#1e293b', borderRadius: 2,
         }} />
         {/* Fill */}
         <div style={{
