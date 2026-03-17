@@ -73,14 +73,16 @@ export function generateCylinderLamp({
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight,
   capBottom = false, capTop = false,
+  mirrorSpiral = false, meshGap = 5,
 }) {
   const lines = [GCODE_HEADER('Cylinder Lamp')]
   let e = 0
   const STEPS = 120
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
-  // Wave Z must stay between the top of the bottom cap and the bottom of the top cap
   const zMin = zOffset
   const zMax = zOffset + layers * layerHeight
+  // Mirror spiral: k derived from meshGap so spirals cross every meshGap mm
+  const k = mirrorSpiral ? (Math.PI * layerHeight / meshGap) : 0.3
 
   if (capBottom) {
     for (let i = 0; i < CAP_LAYERS; i++) {
@@ -95,15 +97,17 @@ export function generateCylinderLamp({
   for (let layer = 0; layer < layers; layer++) {
     const z = zOffset + (layer + 1) * layerHeight
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * radius)) / STEPS / 10
+    // Alternate phase sign each layer for mirror spiral
+    const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(`; Layer ${layer + 1}  Z=${z.toFixed(3)}`)
+    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
       const theta = (step / STEPS) * 2 * Math.PI
-      const radialWave = waveAmp * Math.sin(wallWaves * theta + layer * 0.3)
+      const radialWave = waveAmp * Math.sin(wallWaves * theta + s * layer * k)
       const r = radius + radialWave
-      const zWave = waveAmp * 0.5 * Math.sin(waveFreq * theta + layer * 0.5)
+      const zWave = waveAmp * 0.5 * Math.sin(waveFreq * theta + s * layer * k)
       const x = r * Math.cos(theta)
       const y = r * Math.sin(theta)
       e += ePerStep
@@ -136,6 +140,7 @@ export function generateVase({
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight, flareTop,
   capBottom = false, capTop = false,
+  mirrorSpiral = false, meshGap = 5,
 }) {
   const lines = [GCODE_HEADER('Organic Vase')]
   let e = 0
@@ -143,6 +148,7 @@ export function generateVase({
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
   const zMin = zOffset
   const zMax = zOffset + layers * layerHeight
+  const k = mirrorSpiral ? (Math.PI * layerHeight / meshGap) : 0.25
 
   const profileAt = (progress) => flareTop
     ? 0.6 + 0.4 * Math.sin(progress * Math.PI) + 0.3 * progress
@@ -165,15 +171,16 @@ export function generateVase({
     const profileFactor = profileAt(progress)
     const r = radius * profileFactor
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * r)) / STEPS / 10
+    const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(`; Layer ${layer + 1}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
+    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
       const theta = (step / STEPS) * 2 * Math.PI
-      const radialWave = waveAmp * profileFactor * Math.sin(wallWaves * theta + layer * 0.25)
+      const radialWave = waveAmp * profileFactor * Math.sin(wallWaves * theta + s * layer * k)
       const rFinal = r + radialWave
-      const zWave = waveAmp * 0.4 * Math.sin(waveFreq * theta + layer * 0.6)
+      const zWave = waveAmp * 0.4 * Math.sin(waveFreq * theta + s * layer * k)
       const x = rFinal * Math.cos(theta)
       const y = rFinal * Math.sin(theta)
       e += ePerStep

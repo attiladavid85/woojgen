@@ -96,9 +96,12 @@ export default function App() {
   const [gridY, setGridY]             = useState(5)
 
   // Caps
-  // Caps
   const [capBottom, setCapBottom] = useState(false)
   const [capTop, setCapTop]       = useState(false)
+
+  // Mirror spiral
+  const [mirrorSpiral, setMirrorSpiral] = useState(false)
+  const [meshGap, setMeshGap]           = useState(5)
 
   // Sidebar resize
   const [sidebarWidth, setSidebarWidth] = useState(270)
@@ -124,12 +127,12 @@ export default function App() {
   const generate = useCallback(() => {
     setGenerating(true)
     setTimeout(() => {
-      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop }
+      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap }
       setGcodeText(GENERATORS[mode](p))
       setView('preview')
       setGenerating(false)
     }, 60)
-  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop])
+  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap])
 
   const download = useCallback(() => {
     const blob = new Blob([gcodeText], { type: 'text/plain' })
@@ -252,6 +255,16 @@ export default function App() {
             {mode === 'vase' && (
               <Toggle value={flareTop} onChange={setFlareTop} label="Kiszélesedő teteje"
                 info="A váza teteje tölcsérszerűen kiszélesedik a sugár ~90%-áig." />
+            )}
+            {mode !== 'panel' && (
+              <>
+                <Toggle value={mirrorSpiral} onChange={setMirrorSpiral} label="Tükrözött spirál (rácsminta)"
+                  info="Páros és páratlan rétegek ellentétes fázissal futnak — ahol keresztezik egymást, rács csomópont jön létre." />
+                {mirrorSpiral && (
+                  <Slider label="Rács hézag" value={meshGap} min={1} max={20} step={0.5} onChange={setMeshGap} unit=" mm"
+                    info="A két spirál metszéspontjai közötti távolság mm-ben. Nagyobb érték = ritkább rács." />
+                )}
+              </>
             )}
           </section>
 
