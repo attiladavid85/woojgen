@@ -1,15 +1,48 @@
+import { useState } from 'react'
+
 export default function Slider({ label, value, min, max, step = 1, onChange, unit = '' }) {
-  const pct = ((value - min) / (max - min)) * 100
+  const [editing, setEditing] = useState(false)
+  const [raw, setRaw] = useState('')
+
+  const pct = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100))
+  const display = typeof value === 'number' && !Number.isInteger(value) ? value.toFixed(2) : value
+
+  const commit = (str) => {
+    const num = parseFloat(str)
+    if (!isNaN(num)) onChange(Math.min(max, Math.max(min, num)))
+    setEditing(false)
+  }
 
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
         <span style={{ fontSize: 10, letterSpacing: '0.1em', color: '#556688', textTransform: 'uppercase' }}>
           {label}
         </span>
-        <span style={{ fontSize: 12, color: '#88bbff', fontFamily: 'inherit' }}>
-          {typeof value === 'number' && !Number.isInteger(value) ? value.toFixed(2) : value}{unit}
-        </span>
+        {editing ? (
+          <input
+            autoFocus
+            type="number" min={min} max={max} step={step}
+            defaultValue={display}
+            onChange={e => setRaw(e.target.value)}
+            onBlur={e => commit(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') commit(raw || e.target.value); if (e.key === 'Escape') setEditing(false) }}
+            style={{
+              width: 70, background: '#0d1525', border: '1px solid #2255cc',
+              borderRadius: 4, color: '#88bbff', fontSize: 12,
+              fontFamily: 'inherit', padding: '1px 4px', textAlign: 'right',
+              outline: 'none',
+            }}
+          />
+        ) : (
+          <span
+            onClick={() => { setRaw(''); setEditing(true) }}
+            title="Kattints a szerkesztéshez"
+            style={{ fontSize: 12, color: '#88bbff', fontFamily: 'inherit', cursor: 'text', borderBottom: '1px dashed #2255cc44' }}
+          >
+            {display}{unit}
+          </span>
+        )}
       </div>
 
       <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
