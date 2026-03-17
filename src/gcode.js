@@ -1,5 +1,7 @@
 // ─── G-CODE GENERATORS ────────────────────────────────────────────────────────
 
+import { BAMBU_TOOLPATH_START, bambuLayerMarker } from './bambu.js'
+
 const GCODE_HEADER = (title) => [
   `; ==========================================`,
   `; WoojGen – ${title}`,
@@ -74,9 +76,17 @@ export function generateCylinderLamp({
   extrusionWidth, layerHeight,
   capBottom = false, capTop = false,
   mirrorSpiral = false, meshGap = 5,
+  bambuTemplate = null,
 }) {
-  const lines = [GCODE_HEADER('Cylinder Lamp')]
+  const header = bambuTemplate
+    ? bambuTemplate.header + BAMBU_TOOLPATH_START
+    : GCODE_HEADER('Cylinder Lamp')
+  const footer = bambuTemplate ? bambuTemplate.footer : GCODE_FOOTER
+  const totalLayers = layers + (capBottom ? CAP_LAYERS : 0) + (capTop ? CAP_LAYERS : 0)
+
+  const lines = [header]
   let e = 0
+  let layerNum = 0
   const STEPS = 120
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
   const zMin = zOffset
@@ -86,8 +96,9 @@ export function generateCylinderLamp({
 
   if (capBottom) {
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -95,12 +106,15 @@ export function generateCylinderLamp({
   }
 
   for (let layer = 0; layer < layers; layer++) {
+    layerNum++
     const z = zOffset + (layer + 1) * layerHeight
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * radius)) / STEPS / 10
     // Alternate phase sign each layer for mirror spiral
     const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}`)
+    lines.push(bambuTemplate
+      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
+      : `; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
@@ -121,15 +135,16 @@ export function generateCylinderLamp({
   if (capTop) {
     const topZ = zOffset + layers * layerHeight
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
       lines.push('')
     }
   }
 
-  lines.push(GCODE_FOOTER)
+  lines.push(footer)
   return lines.join('\n')
 }
 
@@ -141,9 +156,17 @@ export function generateVase({
   extrusionWidth, layerHeight, flareTop,
   capBottom = false, capTop = false,
   mirrorSpiral = false, meshGap = 5,
+  bambuTemplate = null,
 }) {
-  const lines = [GCODE_HEADER('Organic Vase')]
+  const header = bambuTemplate
+    ? bambuTemplate.header + BAMBU_TOOLPATH_START
+    : GCODE_HEADER('Organic Vase')
+  const footer = bambuTemplate ? bambuTemplate.footer : GCODE_FOOTER
+  const totalLayers = layers + (capBottom ? CAP_LAYERS : 0) + (capTop ? CAP_LAYERS : 0)
+
+  const lines = [header]
   let e = 0
+  let layerNum = 0
   const STEPS = 120
   const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
   const zMin = zOffset
@@ -157,8 +180,9 @@ export function generateVase({
   if (capBottom) {
     const bottomR = radius * profileAt(0)
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, bottomR, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -166,6 +190,7 @@ export function generateVase({
   }
 
   for (let layer = 0; layer < layers; layer++) {
+    layerNum++
     const z = zOffset + (layer + 1) * layerHeight
     const progress = layer / layers
     const profileFactor = profileAt(progress)
@@ -173,7 +198,9 @@ export function generateVase({
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * r)) / STEPS / 10
     const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
+    lines.push(bambuTemplate
+      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
+      : `; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
@@ -195,15 +222,16 @@ export function generateVase({
     const topR = radius * profileAt(1)
     const topZ = zOffset + layers * layerHeight
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, topR, extrusionWidth, layerHeight, lines, e)
       lines.push('')
     }
   }
 
-  lines.push(GCODE_FOOTER)
+  lines.push(footer)
   return lines.join('\n')
 }
 
@@ -214,9 +242,17 @@ export function generatePanel({
   waveAmp, waveFreq, gridX, gridY,
   extrusionWidth, layerHeight,
   capBottom = true, capTop = false,
+  bambuTemplate = null,
 }) {
-  const lines = [GCODE_HEADER('Fabric Panel')]
+  const header = bambuTemplate
+    ? bambuTemplate.header + BAMBU_TOOLPATH_START
+    : GCODE_HEADER('Fabric Panel')
+  const footer = bambuTemplate ? bambuTemplate.footer : GCODE_FOOTER
+  const totalLayers = layers + (capBottom ? CAP_LAYERS : 0) + (capTop ? CAP_LAYERS : 0)
+
+  const lines = [header]
   let e = 0
+  let layerNum = 0
   const lineCount = Math.round(panelHeight / (extrusionWidth * 2))
   const stepsX = Math.round(panelWidth / extrusionWidth)
   const ePerStep = (extrusionWidth * layerHeight * (panelWidth / stepsX)) / 10
@@ -226,8 +262,9 @@ export function generatePanel({
 
   if (capBottom) {
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(`; Bottom cap ${i + 1}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -235,8 +272,11 @@ export function generatePanel({
   }
 
   for (let layer = 0; layer < layers; layer++) {
+    layerNum++
     const z = zOffset + (layer + 1) * layerHeight
-    lines.push(`; Fabric layer ${layer + 1}`)
+    lines.push(bambuTemplate
+      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
+      : `; Fabric layer ${layer + 1}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let l = 0; l < lineCount; l++) {
@@ -263,14 +303,15 @@ export function generatePanel({
   if (capTop) {
     const topZ = zOffset + layers * layerHeight
     for (let i = 0; i < CAP_LAYERS; i++) {
+      layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(`; Top cap ${i + 1}`)
+      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
       lines.push('')
     }
   }
 
-  lines.push(GCODE_FOOTER)
+  lines.push(footer)
   return lines.join('\n')
 }

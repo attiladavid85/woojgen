@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
 import InfoIcon from './Tooltip.jsx'
 import { generateCylinderLamp, generateVase, generatePanel } from './gcode.js'
+import { parseBambuTemplate } from './bambu.js'
 
 const GENERATORS = { lamp: generateCylinderLamp, vase: generateVase, panel: generatePanel }
 import Slider from './Slider.jsx'
@@ -103,6 +104,28 @@ export default function App() {
   const [mirrorSpiral, setMirrorSpiral] = useState(false)
   const [meshGap, setMeshGap]           = useState(5)
 
+  // Bambu template
+  const [bambuTemplate, setBambuTemplate] = useState(null)
+  const [bambuFileName, setBambuFileName] = useState('')
+  const templateInputRef = useRef(null)
+
+  const onTemplateUpload = useCallback((e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const parsed = parseBambuTemplate(ev.target.result)
+      if (parsed) {
+        setBambuTemplate(parsed)
+        setBambuFileName(file.name)
+      } else {
+        alert('Nem sikerült beolvasni a Bambu sablonfájlt. Ellenőrizd, hogy Bambu Studio által exportált .gcode fájlt töltöttél-e fel.')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }, [])
+
   // Sidebar resize
   const [sidebarWidth, setSidebarWidth] = useState(270)
   const isResizing = useRef(false)
@@ -127,12 +150,12 @@ export default function App() {
   const generate = useCallback(() => {
     setGenerating(true)
     setTimeout(() => {
-      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap }
+      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap, bambuTemplate }
       setGcodeText(GENERATORS[mode](p))
       setView('preview')
       setGenerating(false)
     }, 60)
-  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap])
+  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap, bambuTemplate])
 
   const download = useCallback(() => {
     const blob = new Blob([gcodeText], { type: 'text/plain' })
@@ -275,6 +298,47 @@ export default function App() {
               info="3 tömör réteget nyomtat az alap elé. Jobb tapadás és stabilitás. A hullámok nem mennek a talp alá." />
             <Toggle value={capTop} onChange={setCapTop} label="Fedlap (tömör tető)"
               info="3 tömör réteget nyomtat a fal tetejére. Lezárja a tárgyat. A hullámok nem mennek a fedlap fölé." />
+          </section>
+
+          {/* Bambu template */}
+          <section>
+            <span style={css.sectionLabel}>Bambu sablon</span>
+            <input
+              ref={templateInputRef}
+              type="file"
+              accept=".gcode"
+              onChange={onTemplateUpload}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => templateInputRef.current?.click()}
+              style={{ ...css.btn(!!bambuTemplate), width: '100%', justifyContent: 'flex-start', gap: 8 }}
+            >
+              <span style={{ fontSize: 13 }}>⬆</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 11, color: bambuTemplate ? '#93c5fd' : '#7090b0' }}>
+                  {bambuTemplate ? 'Sablon betöltve' : 'Bambu .gcode sablon'}
+                </div>
+                {bambuFileName && (
+                  <div style={{ fontSize: 9, color: '#4a6a8a', letterSpacing: '0.05em', marginTop: 2 }}>
+                    {bambuFileName}
+                  </div>
+                )}
+              </div>
+            </button>
+            {bambuTemplate && (
+              <button
+                onClick={() => { setBambuTemplate(null); setBambuFileName('') }}
+                style={{ ...css.btn(false), width: '100%', justifyContent: 'center', color: '#5a7295', fontSize: 10, marginTop: 4 }}
+              >
+                ✕  Generic header visszaállítása
+              </button>
+            )}
+            <div style={{ fontSize: 9, color: '#3a5070', marginTop: 6, lineHeight: 1.5 }}>
+              {bambuTemplate
+                ? 'A generált G-kód a te Bambu profil beállításaiddal fog elkészülni.'
+                : 'Töltsd fel a Bambu Studióból exportált .gcode fájlt a P1S-kompatibilis kimenethez.'}
+            </div>
           </section>
 
           {/* Actions */}
