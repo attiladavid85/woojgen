@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import InfoIcon from './Tooltip.jsx'
 
-export default function Slider({ label, value, min, max, step = 1, onChange, unit = '' }) {
+export default function Slider({ label, value, min, max, step = 1, onChange, unit = '', info }) {
   const [editing, setEditing] = useState(false)
   const [raw, setRaw] = useState('')
 
@@ -16,8 +17,8 @@ export default function Slider({ label, value, min, max, step = 1, onChange, uni
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-        <span style={{ fontSize: 10, letterSpacing: '0.1em', color: '#8aa8c8', textTransform: 'uppercase' }}>
-          {label}
+        <span style={{ display: 'flex', alignItems: 'center', fontSize: 10, letterSpacing: '0.1em', color: '#8aa8c8', textTransform: 'uppercase' }}>
+          {label}{info && <InfoIcon text={info} />}
         </span>
         {editing ? (
           <input

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
+import InfoIcon from './Tooltip.jsx'
 import { generateCylinderLamp, generateVase, generatePanel } from './gcode.js'
 
 const GENERATORS = { lamp: generateCylinderLamp, vase: generateVase, panel: generatePanel }
@@ -42,7 +43,7 @@ const css = {
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
 
-function Toggle({ value, onChange, label }) {
+function Toggle({ value, onChange, label, info }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
       <div
@@ -51,7 +52,7 @@ function Toggle({ value, onChange, label }) {
           width: 36, height: 20, borderRadius: 10, cursor: 'pointer',
           background: value ? '#2258d8' : '#1e293b',
           border: '1px solid #2d4060',
-          position: 'relative', transition: 'background 0.2s',
+          position: 'relative', transition: 'background 0.2s', flexShrink: 0,
         }}
       >
         <div style={{
@@ -61,7 +62,9 @@ function Toggle({ value, onChange, label }) {
           transition: 'left 0.2s, background 0.2s',
         }} />
       </div>
-      <span style={{ fontSize: 11, color: '#8aa8c8' }}>{label}</span>
+      <span style={{ fontSize: 11, color: '#8aa8c8', display: 'flex', alignItems: 'center' }}>
+        {label}{info && <InfoIcon text={info} />}
+      </span>
     </div>
   )
 }
@@ -176,41 +179,55 @@ export default function App() {
           <section>
             <span style={css.sectionLabel}>Méretek</span>
             {mode !== 'panel' ? (
-              <Slider label="Sugár" value={radius} min={10} max={125} onChange={setRadius} unit=" mm" />
+              <Slider label="Sugár" value={radius} min={10} max={125} onChange={setRadius} unit=" mm"
+                info="A hengeres fal sugara mm-ben. Az átmérő ennek kétszerese." />
             ) : (
               <>
-                <Slider label="Szélesség" value={panelWidth}  min={30} max={250} onChange={setPanelWidth}  unit=" mm" />
-                <Slider label="Magasság"  value={panelHeight} min={30} max={250} onChange={setPanelHeight} unit=" mm" />
+                <Slider label="Szélesség" value={panelWidth}  min={30} max={250} onChange={setPanelWidth}  unit=" mm"
+                  info="A panel vízszintes mérete mm-ben." />
+                <Slider label="Magasság"  value={panelHeight} min={30} max={250} onChange={setPanelHeight} unit=" mm"
+                  info="A panel függőleges mérete mm-ben." />
               </>
             )}
-            <Slider label="Rétegek száma"      value={layers}      min={10}  max={2500} onChange={setLayers} />
-            <Slider label="Rétegmagasság"       value={layerHeight} min={0.1} max={0.4}  step={0.05} onChange={setLayerHeight} unit=" mm" />
-            <Slider label="Extrudálás szélesség" value={extrusionW}  min={0.2} max={0.8}  step={0.05} onChange={setExtrusionW}  unit=" mm" />
+            <Slider label="Rétegek száma" value={layers} min={10} max={2500} onChange={setLayers}
+              info="Hány réteget nyomtat a gép. Magasság = rétegek × rétegmagasság. P1S max: 250mm." />
+            <Slider label="Rétegmagasság" value={layerHeight} min={0.1} max={0.4} step={0.05} onChange={setLayerHeight} unit=" mm"
+              info="Egy nyomtatott réteg vastagsága. Kisebb = szebb felület, lassabb nyomtatás. P1S ajánlott: 0.2mm." />
+            <Slider label="Extrudálás szélesség" value={extrusionW} min={0.2} max={0.8} step={0.05} onChange={setExtrusionW} unit=" mm"
+              info="A lerakott szál szélessége. Általában a fúvóka átmérőjével egyezik (0.4mm)." />
           </section>
 
           {/* Pattern */}
           <section>
             <span style={css.sectionLabel}>Mintázat</span>
-            <Slider label="Hullám amplitúdó"   value={waveAmp}   min={0}  max={10} step={0.5} onChange={setWaveAmp}   unit=" mm" />
-            <Slider label="Z hullám frekvencia" value={waveFreq}  min={1}  max={20}            onChange={setWaveFreq} />
+            <Slider label="Hullám amplitúdó" value={waveAmp} min={0} max={10} step={0.5} onChange={setWaveAmp} unit=" mm"
+              info="A fal ki-be hullámzásának mértéke mm-ben. 0 = sima fal, nagyobb érték = erőteljesebb szövetminta." />
+            <Slider label="Z hullám frekvencia" value={waveFreq} min={1} max={20} onChange={setWaveFreq}
+              info="Hány hullámhegy jelenik meg magassági irányban. Nagyobb = sűrűbb függőleges minta." />
             {mode !== 'panel' ? (
-              <Slider label="Fal hullámok" value={wallWaves} min={2} max={24} onChange={setWallWaves} />
+              <Slider label="Fal hullámok" value={wallWaves} min={2} max={24} onChange={setWallWaves}
+                info="Hány hullámzás fut körbe a falon. Páros szám ajánlott a szimmetriához." />
             ) : (
               <>
-                <Slider label="Rács X" value={gridX} min={1} max={20} onChange={setGridX} />
-                <Slider label="Rács Y" value={gridY} min={1} max={20} onChange={setGridY} />
+                <Slider label="Rács X" value={gridX} min={1} max={20} onChange={setGridX}
+                  info="A szövetes hullám sűrűsége vízszintes irányban. Nagyobb = sűrűbb rács." />
+                <Slider label="Rács Y" value={gridY} min={1} max={20} onChange={setGridY}
+                  info="A szövetes hullám sűrűsége függőleges irányban. Nagyobb = sűrűbb rács." />
               </>
             )}
             {mode === 'vase' && (
-              <Toggle value={flareTop} onChange={setFlareTop} label="Kiszélesedő teteje" />
+              <Toggle value={flareTop} onChange={setFlareTop} label="Kiszélesedő teteje"
+                info="A váza teteje tölcsérszerűen kiszélesedik a sugár ~90%-áig." />
             )}
           </section>
 
           {/* Caps */}
           <section>
             <span style={css.sectionLabel}>Lezárás</span>
-            <Toggle value={capBottom} onChange={setCapBottom} label="Talp (tömör alap)" />
-            <Toggle value={capTop}    onChange={setCapTop}    label="Fedlap (tömör tető)" />
+            <Toggle value={capBottom} onChange={setCapBottom} label="Talp (tömör alap)"
+              info="3 tömör réteget nyomtat az alap elé. Jobb tapadás és stabilitás. A hullámok nem mennek a talp alá." />
+            <Toggle value={capTop} onChange={setCapTop} label="Fedlap (tömör tető)"
+              info="3 tömör réteget nyomtat a fal tetejére. Lezárja a tárgyat. A hullámok nem mennek a fedlap fölé." />
           </section>
 
           {/* Actions */}
