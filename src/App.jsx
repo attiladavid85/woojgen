@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
+import { useState, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
 import InfoIcon from './Tooltip.jsx'
 import { generateCylinderLamp, generateVase, generatePanel } from './gcode.js'
 
@@ -96,8 +96,30 @@ export default function App() {
   const [gridY, setGridY]             = useState(5)
 
   // Caps
+  // Caps
   const [capBottom, setCapBottom] = useState(false)
   const [capTop, setCapTop]       = useState(false)
+
+  // Sidebar resize
+  const [sidebarWidth, setSidebarWidth] = useState(270)
+  const isResizing = useRef(false)
+
+  const onResizeStart = useCallback((e) => {
+    isResizing.current = true
+    const startX = e.clientX
+    const startW = sidebarWidth
+    const onMove = (ev) => {
+      if (!isResizing.current) return
+      setSidebarWidth(Math.min(480, Math.max(200, startW + ev.clientX - startX)))
+    }
+    const onUp = () => {
+      isResizing.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [sidebarWidth])
 
   const generate = useCallback(() => {
     setGenerating(true)
@@ -154,11 +176,23 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* ── Sidebar ── */}
         <aside style={{
-          width: 270, background: '#111827',
-          borderRight: '1px solid #1e293b',
+          width: sidebarWidth, background: '#111827',
           overflowY: 'auto', padding: '22px 20px',
           flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24,
+          position: 'relative',
         }}>
+          {/* Resize handle */}
+          <div
+            onMouseDown={onResizeStart}
+            style={{
+              position: 'absolute', top: 0, right: 0, width: 5, height: '100%',
+              cursor: 'col-resize', zIndex: 10,
+              background: 'linear-gradient(to right, transparent, #1e293b)',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(to right, transparent, #2a65d8)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(to right, transparent, #1e293b)'}
+          />
           {/* Mode */}
           <section>
             <span style={css.sectionLabel}>Objektum típus</span>
