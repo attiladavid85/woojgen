@@ -1,5 +1,7 @@
-import { useState, useCallback, lazy, Suspense } from 'react'
+import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
 import { generateCylinderLamp, generateVase, generatePanel } from './gcode.js'
+
+const GENERATORS = { lamp: generateCylinderLamp, vase: generateVase, panel: generatePanel }
 import Slider from './Slider.jsx'
 
 const Preview3D = lazy(() => import('./Preview3D.jsx'))
@@ -70,8 +72,9 @@ export default function App() {
   const [mode, setMode] = useState('lamp')
   const [view, setView] = useState('preview') // 'preview' | 'gcode'
   const [generating, setGenerating] = useState(false)
-  const [gcodeLines, setGcodeLines] = useState([])
   const [gcodeText, setGcodeText] = useState('')
+
+  const gcodeLines = useMemo(() => gcodeText ? gcodeText.split('\n') : [], [gcodeText])
 
   // Shared params
   const [radius, setRadius]               = useState(30)
@@ -93,18 +96,13 @@ export default function App() {
     setGenerating(true)
     setTimeout(() => {
       const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY }
-      let gcode = ''
-      if (mode === 'lamp')  gcode = generateCylinderLamp(p)
-      if (mode === 'vase')  gcode = generateVase(p)
-      if (mode === 'panel') gcode = generatePanel(p)
-      setGcodeText(gcode)
-      setGcodeLines(gcode.split('\n'))
+      setGcodeText(GENERATORS[mode](p))
       setView('preview')
       setGenerating(false)
     }, 60)
   }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY])
 
-  const download = () => {
+  const download = useCallback(() => {
     const blob = new Blob([gcodeText], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -112,9 +110,9 @@ export default function App() {
     a.download = `woojgen_${mode}_${Date.now()}.gcode`
     a.click()
     URL.revokeObjectURL(url)
-  }
+  }, [gcodeText, mode])
 
-  const moveCount = gcodeLines.filter(l => l.startsWith('G1')).length
+  const moveCount = useMemo(() => gcodeLines.filter(l => l.startsWith('G1')).length, [gcodeLines])
 
   return (
     <div style={{

@@ -58,6 +58,8 @@ export default function Preview3D({ gcodeLines }) {
       }
     }
 
+    let geometry = null, mat = null
+
     if (points.length > 1) {
       // Downsample if too many points for performance
       const MAX_POINTS = 30000
@@ -65,20 +67,20 @@ export default function Preview3D({ gcodeLines }) {
         ? points.filter((_, i) => i % Math.ceil(points.length / MAX_POINTS) === 0)
         : points
 
-      const geometry = new THREE.BufferGeometry().setFromPoints(sampled)
+      geometry = new THREE.BufferGeometry().setFromPoints(sampled)
 
       // Height-based color gradient
-      const colors = []
-      for (const p of sampled) {
-        const t = (p.y - minY) / (maxY - minY || 1)
-        const c = new THREE.Color()
+      const colors = new Float32Array(sampled.length * 3)
+      const c = new THREE.Color()
+      for (let i = 0; i < sampled.length; i++) {
+        const t = (sampled[i].y - minY) / (maxY - minY || 1)
         // Deep blue → cyan → white gradient
         c.setHSL(0.58 - t * 0.15, 0.85 - t * 0.3, 0.25 + t * 0.55)
-        colors.push(c.r, c.g, c.b)
+        colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b
       }
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
 
-      const mat = new THREE.LineBasicMaterial({ vertexColors: true })
+      mat = new THREE.LineBasicMaterial({ vertexColors: true })
       scene.add(new THREE.Line(geometry, mat))
 
       // Center camera on object
@@ -127,8 +129,8 @@ export default function Preview3D({ gcodeLines }) {
     el.addEventListener('touchstart', onDown)
     window.addEventListener('mouseup', onUp)
     window.addEventListener('touchend', onUp)
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('touchmove', onMove)
+    el.addEventListener('mousemove', onMove)
+    el.addEventListener('touchmove', onMove, { passive: true })
     el.addEventListener('wheel', onWheel, { passive: true })
 
     // ── Resize ──
@@ -144,14 +146,16 @@ export default function Preview3D({ gcodeLines }) {
     return () => {
       cancelAnimationFrame(frameId)
       ro.disconnect()
+      geometry?.dispose()
+      mat?.dispose()
       renderer.dispose()
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
       el.removeEventListener('mousedown', onDown)
       el.removeEventListener('touchstart', onDown)
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('touchend', onUp)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('touchmove', onMove)
+      el.removeEventListener('mousemove', onMove)
+      el.removeEventListener('touchmove', onMove)
       el.removeEventListener('wheel', onWheel)
     }
   }, [gcodeLines])
