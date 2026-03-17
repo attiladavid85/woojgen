@@ -30,19 +30,67 @@ const GCODE_FOOTER = [
   `M84      ; motors off`,
 ].join('\n')
 
+const CAP_LAYERS = 3
+
+// Fills a solid circular disk at height z, returns updated e
+function solidDisk(z, r, extrusionWidth, layerHeight, lines, e) {
+  let cr = r
+  while (cr > extrusionWidth / 2) {
+    const STEPS = Math.max(24, Math.round((2 * Math.PI * cr) / extrusionWidth))
+    const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * cr)) / STEPS / 10
+    for (let step = 0; step <= STEPS; step++) {
+      const theta = (step / STEPS) * 2 * Math.PI
+      e += ePerStep
+      lines.push(`G1 X${(cr * Math.cos(theta)).toFixed(3)} Y${(cr * Math.sin(theta)).toFixed(3)} Z${z.toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`)
+    }
+    cr -= extrusionWidth
+  }
+  return e
+}
+
+// Fills a solid rectangle at height z, returns updated e
+function solidRect(z, w, h, extrusionWidth, layerHeight, lines, e) {
+  const lineCount = Math.round(h / (extrusionWidth * 2))
+  const stepsX = Math.round(w / extrusionWidth)
+  const ePerStep = (extrusionWidth * layerHeight * (w / stepsX)) / 10
+  for (let l = 0; l < lineCount; l++) {
+    const yBase = -h / 2 + (l / lineCount) * h
+    const forward = l % 2 === 0
+    for (let step = 0; step <= stepsX; step++) {
+      const progress = step / stepsX
+      const x = forward ? -w / 2 + progress * w : w / 2 - progress * w
+      e += ePerStep
+      lines.push(`G1 X${x.toFixed(3)} Y${yBase.toFixed(3)} Z${z.toFixed(3)} E${e.toFixed(5)} F2400`)
+    }
+  }
+  return e
+}
+
 // ── Cylinder Lamp ──────────────────────────────────────────────────────────
 
 export function generateCylinderLamp({
   radius, layers,
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight,
+  capBottom = false, capTop = false,
 }) {
   const lines = [GCODE_HEADER('Cylinder Lamp')]
   let e = 0
   const STEPS = 120
+  const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
+
+  if (capBottom) {
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = (i + 1) * layerHeight
+      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
+    }
+  }
 
   for (let layer = 0; layer < layers; layer++) {
-    const z = (layer + 1) * layerHeight
+    const z = zOffset + (layer + 1) * layerHeight
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * radius)) / STEPS / 10
 
     lines.push(`; Layer ${layer + 1}  Z=${z.toFixed(3)}`)
@@ -50,23 +98,28 @@ export function generateCylinderLamp({
 
     for (let step = 0; step <= STEPS; step++) {
       const theta = (step / STEPS) * 2 * Math.PI
-
-      // Radial wall wave
       const radialWave = waveAmp * Math.sin(wallWaves * theta + layer * 0.3)
       const r = radius + radialWave
-
-      // Z oscillation for fabric drape effect
       const zWave = waveAmp * 0.5 * Math.sin(waveFreq * theta + layer * 0.5)
-
       const x = r * Math.cos(theta)
       const y = r * Math.sin(theta)
       e += ePerStep
-
       lines.push(
         `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
       )
     }
     lines.push('')
+  }
+
+  if (capTop) {
+    const topZ = zOffset + layers * layerHeight
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = topZ + (i + 1) * layerHeight
+      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
+    }
   }
 
   lines.push(GCODE_FOOTER)
@@ -79,21 +132,33 @@ export function generateVase({
   radius, layers,
   waveAmp, waveFreq, wallWaves,
   extrusionWidth, layerHeight, flareTop,
+  capBottom = false, capTop = false,
 }) {
   const lines = [GCODE_HEADER('Organic Vase')]
   let e = 0
   const STEPS = 120
+  const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
+
+  const profileAt = (progress) => flareTop
+    ? 0.6 + 0.4 * Math.sin(progress * Math.PI) + 0.3 * progress
+    : 0.7 + 0.3 * Math.sin(progress * Math.PI * 0.8)
+
+  if (capBottom) {
+    const bottomR = radius * profileAt(0)
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = (i + 1) * layerHeight
+      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidDisk(z, bottomR, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
+    }
+  }
 
   for (let layer = 0; layer < layers; layer++) {
-    const z = (layer + 1) * layerHeight
+    const z = zOffset + (layer + 1) * layerHeight
     const progress = layer / layers
-
-    // Profile curve: narrow base, wider middle, optional flare
-    const profileFactor = flareTop
-      ? 0.6 + 0.4 * Math.sin(progress * Math.PI) + 0.3 * progress
-      : 0.7 + 0.3 * Math.sin(progress * Math.PI * 0.8)
+    const profileFactor = profileAt(progress)
     const r = radius * profileFactor
-
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * r)) / STEPS / 10
 
     lines.push(`; Layer ${layer + 1}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
@@ -101,20 +166,29 @@ export function generateVase({
 
     for (let step = 0; step <= STEPS; step++) {
       const theta = (step / STEPS) * 2 * Math.PI
-
       const radialWave = waveAmp * profileFactor * Math.sin(wallWaves * theta + layer * 0.25)
       const rFinal = r + radialWave
       const zWave = waveAmp * 0.4 * Math.sin(waveFreq * theta + layer * 0.6)
-
       const x = rFinal * Math.cos(theta)
       const y = rFinal * Math.sin(theta)
       e += ePerStep
-
       lines.push(
         `G1 X${x.toFixed(3)} Y${y.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
       )
     }
     lines.push('')
+  }
+
+  if (capTop) {
+    const topR = radius * profileAt(1)
+    const topZ = zOffset + layers * layerHeight
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = topZ + (i + 1) * layerHeight
+      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidDisk(z, topR, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
+    }
   }
 
   lines.push(GCODE_FOOTER)
@@ -127,34 +201,27 @@ export function generatePanel({
   panelWidth, panelHeight, layers,
   waveAmp, waveFreq, gridX, gridY,
   extrusionWidth, layerHeight,
+  capBottom = true, capTop = false,
 }) {
   const lines = [GCODE_HEADER('Fabric Panel')]
   let e = 0
   const lineCount = Math.round(panelHeight / (extrusionWidth * 2))
   const stepsX = Math.round(panelWidth / extrusionWidth)
   const ePerStep = (extrusionWidth * layerHeight * (panelWidth / stepsX)) / 10
+  const zOffset = capBottom ? CAP_LAYERS * layerHeight : 0
 
-  // Solid base (2 layers)
-  for (let layer = 0; layer < 2; layer++) {
-    const z = (layer + 1) * layerHeight
-    lines.push(`; Base layer ${layer + 1}`)
-    lines.push(`G1 Z${z.toFixed(3)} F600`)
-    for (let l = 0; l < lineCount; l++) {
-      const yBase = -panelHeight / 2 + (l / lineCount) * panelHeight
-      const forward = l % 2 === 0
-      for (let step = 0; step <= stepsX; step++) {
-        const progress = step / stepsX
-        const x = forward ? -panelWidth / 2 + progress * panelWidth : panelWidth / 2 - progress * panelWidth
-        e += ePerStep
-        lines.push(`G1 X${x.toFixed(3)} Y${yBase.toFixed(3)} Z${z.toFixed(3)} E${e.toFixed(5)} F2400`)
-      }
+  if (capBottom) {
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = (i + 1) * layerHeight
+      lines.push(`; Bottom cap ${i + 1}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
     }
-    lines.push('')
   }
 
-  // Fabric layers with wave
-  for (let layer = 2; layer < layers; layer++) {
-    const z = (layer + 1) * layerHeight
+  for (let layer = 0; layer < layers; layer++) {
+    const z = zOffset + (layer + 1) * layerHeight
     lines.push(`; Fabric layer ${layer + 1}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
@@ -167,12 +234,9 @@ export function generatePanel({
         const x = forward
           ? -panelWidth / 2 + progress * panelWidth
           : panelWidth / 2 - progress * panelWidth
-
-        // Woven fabric wave: XY combined oscillation
         const zWave =
           waveAmp * Math.sin(gridX * x * 0.25 + layer * 0.5) *
           Math.cos(gridY * yBase * 0.25 + layer * 0.4)
-
         e += ePerStep
         lines.push(
           `G1 X${x.toFixed(3)} Y${yBase.toFixed(3)} Z${(z + zWave).toFixed(3)} E${e.toFixed(5)} F${step === 0 ? 1200 : 2400}`
@@ -180,6 +244,17 @@ export function generatePanel({
       }
     }
     lines.push('')
+  }
+
+  if (capTop) {
+    const topZ = zOffset + layers * layerHeight
+    for (let i = 0; i < CAP_LAYERS; i++) {
+      const z = topZ + (i + 1) * layerHeight
+      lines.push(`; Top cap ${i + 1}`)
+      lines.push(`G1 Z${z.toFixed(3)} F600`)
+      e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
+      lines.push('')
+    }
   }
 
   lines.push(GCODE_FOOTER)
