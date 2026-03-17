@@ -92,15 +92,19 @@ export default function App() {
   const [gridX, setGridX]             = useState(5)
   const [gridY, setGridY]             = useState(5)
 
+  // Caps
+  const [capBottom, setCapBottom] = useState(false)
+  const [capTop, setCapTop]       = useState(false)
+
   const generate = useCallback(() => {
     setGenerating(true)
     setTimeout(() => {
-      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY }
+      const p = { radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop }
       setGcodeText(GENERATORS[mode](p))
       setView('preview')
       setGenerating(false)
     }, 60)
-  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY])
+  }, [mode, radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop, panelWidth, panelHeight, gridX, gridY, capBottom, capTop])
 
   const download = useCallback(() => {
     const blob = new Blob([gcodeText], { type: 'text/plain' })
@@ -200,6 +204,13 @@ export default function App() {
             {mode === 'vase' && (
               <Toggle value={flareTop} onChange={setFlareTop} label="Kiszélesedő teteje" />
             )}
+          </section>
+
+          {/* Caps */}
+          <section>
+            <span style={css.sectionLabel}>Lezárás</span>
+            <Toggle value={capBottom} onChange={setCapBottom} label="Talp (tömör alap)" />
+            <Toggle value={capTop}    onChange={setCapTop}    label="Fedlap (tömör tető)" />
           </section>
 
           {/* Actions */}
