@@ -41,20 +41,20 @@ export default function Preview3D({ gcodeLines }) {
     scene.add(grid)
 
     // ── Parse G-code ──
-    const points = []
+    const allPoints = []   // { x, y, z, isCap }
     let minY = Infinity, maxY = -Infinity
     let inCap = false
 
     for (const line of gcodeLines) {
-      // Track cap sections by comment — skip their G1 moves to keep preview clean
+      // Track cap sections — WoojGen always emits these markers in both Bambu and generic mode
       if (line.startsWith('; Bottom cap') || line.startsWith('; Top cap')) {
         inCap = true
         continue
       }
-      if (line.startsWith('; Layer') || line.startsWith('; Fabric layer') || line.startsWith('; CHANGE_LAYER')) {
+      if (line.startsWith('; Layer') || line.startsWith('; Fabric layer')) {
         inCap = false
       }
-      if (inCap || !line.startsWith('G1')) continue
+      if (!line.startsWith('G1')) continue
       const xm = line.match(/X([-\d.]+)/)
       const ym = line.match(/Y([-\d.]+)/)
       const zm = line.match(/Z([-\d.]+)/)
@@ -63,30 +63,38 @@ export default function Preview3D({ gcodeLines }) {
         const py = parseFloat(zm[1])
         minY = Math.min(minY, py)
         maxY = Math.max(maxY, py)
-        points.push(new THREE.Vector3(parseFloat(xm[1]), py, parseFloat(ym[1])))
+        allPoints.push({ x: parseFloat(xm[1]), y: py, z: parseFloat(ym[1]), isCap: inCap })
       }
     }
 
     let geometry = null, mat = null
 
-    if (points.length > 1) {
+    if (allPoints.length > 1) {
       // Downsample if too many points for performance
-      const MAX_POINTS = 30000
-      const sampled = points.length > MAX_POINTS
-        ? points.filter((_, i) => i % Math.ceil(points.length / MAX_POINTS) === 0)
-        : points
+      const MAX_POINTS = 40000
+      const sampled = allPoints.length > MAX_POINTS
+        ? allPoints.filter((_, i) => i % Math.ceil(allPoints.length / MAX_POINTS) === 0)
+        : allPoints
 
-      geometry = new THREE.BufferGeometry().setFromPoints(sampled)
-
-      // Height-based color gradient
+      const positions = new Float32Array(sampled.length * 3)
+      // Height-based color gradient; cap layers rendered in muted silver
       const colors = new Float32Array(sampled.length * 3)
       const c = new THREE.Color()
       for (let i = 0; i < sampled.length; i++) {
-        const t = (sampled[i].y - minY) / (maxY - minY || 1)
-        // Deep blue → cyan → white gradient
-        c.setHSL(0.58 - t * 0.15, 0.85 - t * 0.3, 0.25 + t * 0.55)
+        const p = sampled[i]
+        positions[i * 3] = p.x; positions[i * 3 + 1] = p.y; positions[i * 3 + 2] = p.z
+        if (p.isCap) {
+          // Muted blue-gray for cap layers so they're visible but distinct
+          c.setRGB(0.28, 0.34, 0.44)
+        } else {
+          const t = (p.y - minY) / (maxY - minY || 1)
+          // Deep blue → cyan → white gradient
+          c.setHSL(0.58 - t * 0.15, 0.85 - t * 0.3, 0.25 + t * 0.55)
+        }
         colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b
       }
+      geometry = new THREE.BufferGeometry()
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
 
       mat = new THREE.LineBasicMaterial({ vertexColors: true })

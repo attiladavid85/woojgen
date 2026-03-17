@@ -102,7 +102,8 @@ export function generateCylinderLamp({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -116,9 +117,8 @@ export function generateCylinderLamp({
     // Alternate phase sign each layer for mirror spiral
     const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(bambuTemplate
-      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
-      : `; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}`)
+    if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
@@ -141,7 +141,8 @@ export function generateCylinderLamp({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, radius, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -186,7 +187,8 @@ export function generateVase({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Bottom cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, bottomR, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -202,9 +204,8 @@ export function generateVase({
     const ePerStep = (extrusionWidth * layerHeight * (2 * Math.PI * r)) / STEPS / 10
     const s = (mirrorSpiral && layer % 2 === 1) ? -1 : 1
 
-    lines.push(bambuTemplate
-      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
-      : `; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
+    if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+    lines.push(`; Layer ${layer + 1}${mirrorSpiral && layer % 2 === 1 ? ' [mirror]' : ''}  Z=${z.toFixed(3)}  r=${r.toFixed(2)}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let step = 0; step <= STEPS; step++) {
@@ -228,7 +229,8 @@ export function generateVase({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Top cap ${i + 1}  Z=${z.toFixed(3)}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidDisk(z, topR, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -268,7 +270,8 @@ export function generatePanel({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Bottom cap ${i + 1}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Bottom cap ${i + 1}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
       lines.push('')
@@ -278,9 +281,8 @@ export function generatePanel({
   for (let layer = 0; layer < layers; layer++) {
     layerNum++
     const z = zOffset + (layer + 1) * layerHeight
-    lines.push(bambuTemplate
-      ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight)
-      : `; Fabric layer ${layer + 1}`)
+    if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+    lines.push(`; Fabric layer ${layer + 1}`)
     lines.push(`G1 Z${z.toFixed(3)} F600`)
 
     for (let l = 0; l < lineCount; l++) {
@@ -309,7 +311,8 @@ export function generatePanel({
     for (let i = 0; i < CAP_LAYERS; i++) {
       layerNum++
       const z = topZ + (i + 1) * layerHeight
-      lines.push(bambuTemplate ? bambuLayerMarker(layerNum, totalLayers, z, layerHeight) : `; Top cap ${i + 1}`)
+      if (bambuTemplate) lines.push(bambuLayerMarker(layerNum, totalLayers, z, layerHeight))
+      lines.push(`; Top cap ${i + 1}`)
       lines.push(`G1 Z${z.toFixed(3)} F600`)
       e = solidRect(z, panelWidth, panelHeight, extrusionWidth, layerHeight, lines, e)
       lines.push('')
