@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WoojGen – Parametric G-Code Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: #06060f; overflow: hidden; }
+      input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; }
+      input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; }
+      input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border: none; background: transparent; }
+      input[type=range]::-webkit-slider-runnable-track { height: 20px; cursor: pointer; }
+      input[type=range]::-moz-range-track { height: 20px; cursor: pointer; }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: #08081a; }
+      ::-webkit-scrollbar-thumb { background: #1a2a4a; border-radius: 2px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
