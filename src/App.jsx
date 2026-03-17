@@ -1,8 +1,11 @@
 import { useState, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
 import InfoIcon from './Tooltip.jsx'
 import { generateCylinderLamp, generateVase, generatePanel } from './gcode.js'
+import { cylinderLampMesh, vaseMesh, panelMesh } from './mesh.js'
+import { exportSTL, export3MF } from './exportMesh.js'
 
 const GENERATORS = { lamp: generateCylinderLamp, vase: generateVase, panel: generatePanel }
+const MESH_GENERATORS = { lamp: cylinderLampMesh, vase: vaseMesh, panel: panelMesh }
 import Slider from './Slider.jsx'
 
 const Preview3D = lazy(() => import('./Preview3D.jsx'))
@@ -143,6 +146,23 @@ export default function App() {
     a.click()
     URL.revokeObjectURL(url)
   }, [gcodeText, mode])
+
+  const meshParams = useMemo(() => ({
+    radius, layers, waveAmp, waveFreq, wallWaves, layerHeight,
+    extrusionWidth: extrusionW, flareTop, panelWidth, panelHeight,
+    gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap,
+  }), [radius, layers, waveAmp, waveFreq, wallWaves, layerHeight, extrusionW, flareTop,
+      panelWidth, panelHeight, gridX, gridY, capBottom, capTop, mirrorSpiral, meshGap])
+
+  const downloadSTL = useCallback(() => {
+    const tris = MESH_GENERATORS[mode](meshParams)
+    exportSTL(tris, `woojgen_${mode}_${Date.now()}.stl`)
+  }, [mode, meshParams])
+
+  const download3MF = useCallback(() => {
+    const tris = MESH_GENERATORS[mode](meshParams)
+    export3MF(tris, `woojgen_${mode}_${Date.now()}.3mf`)
+  }, [mode, meshParams])
 
   const moveCount = useMemo(() => gcodeLines.filter(l => l.startsWith('G1')).length, [gcodeLines])
 
@@ -292,6 +312,12 @@ export default function App() {
               <>
                 <button onClick={download} style={{ ...css.btn(false), justifyContent: 'center', color: '#8aa8c8' }}>
                   ↓  G-kód letöltés
+                </button>
+                <button onClick={downloadSTL} style={{ ...css.btn(false), justifyContent: 'center', color: '#8aa8c8' }}>
+                  ↓  STL letöltés
+                </button>
+                <button onClick={download3MF} style={{ ...css.btn(false), justifyContent: 'center', color: '#8aa8c8' }}>
+                  ↓  3MF letöltés
                 </button>
                 <button
                   onClick={() => setView(v => v === 'gcode' ? 'preview' : 'gcode')}
