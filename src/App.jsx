@@ -172,14 +172,14 @@ export default function App() {
           <section>
             <span style={css.sectionLabel}>Méretek</span>
             {mode !== 'panel' ? (
-              <Slider label="Sugár" value={radius} min={10} max={80} onChange={setRadius} unit=" mm" />
+              <Slider label="Sugár" value={radius} min={10} max={125} onChange={setRadius} unit=" mm" />
             ) : (
               <>
-                <Slider label="Szélesség" value={panelWidth}  min={30} max={150} onChange={setPanelWidth}  unit=" mm" />
-                <Slider label="Magasság"  value={panelHeight} min={30} max={150} onChange={setPanelHeight} unit=" mm" />
+                <Slider label="Szélesség" value={panelWidth}  min={30} max={250} onChange={setPanelWidth}  unit=" mm" />
+                <Slider label="Magasság"  value={panelHeight} min={30} max={250} onChange={setPanelHeight} unit=" mm" />
               </>
             )}
-            <Slider label="Rétegek száma"      value={layers}      min={10}  max={200}  onChange={setLayers} />
+            <Slider label="Rétegek száma"      value={layers}      min={10}  max={2500} onChange={setLayers} />
             <Slider label="Rétegmagasság"       value={layerHeight} min={0.1} max={0.4}  step={0.05} onChange={setLayerHeight} unit=" mm" />
             <Slider label="Extrudálás szélesség" value={extrusionW}  min={0.2} max={0.8}  step={0.05} onChange={setExtrusionW}  unit=" mm" />
           </section>
